@@ -532,7 +532,11 @@ class FeverAPI extends Handler {
         else if (isset($_REQUEST["with_ids"])) // selective
         {
             $item_ids = array_map("intval", array_filter(explode(",", clean($_REQUEST["with_ids"])), "is_numeric"));
-            $item_ids_qmarks = arr_qmarks($item_ids);
+            $item_ids_count_arr = array(1,"1");
+            if (count($item_ids) >= 1) {
+                $item_ids_count_arr = $item_ids;
+            }
+            $item_ids_qmarks = arr_qmarks($item_ids_count_arr);
             
             $where .= " AND id IN ($item_ids_qmarks) ";
             $where_items = array_merge($where_items, $item_ids);
@@ -779,10 +783,6 @@ class FeverAPI extends Handler {
                 $sth = $this->pdo->prepare("SELECT DISTINCT feed_id FROM ttrss_user_entries
                                             WHERE ref_id IN ($article_qmarks)");
                 $sth->execute($article_ids);
-
-                while ($line = $sth->fetch()) {
-                    CCache::update($line["feed_id"], clean($_SESSION["uid"]));
-                }
             }
         }
     }
@@ -857,7 +857,6 @@ class FeverAPI extends Handler {
                 $sth->execute([clean($_SESSION["uid"]), intval($id), date("Y-m-d H:i:s", $before)]);
 
             }
-            CCache::update($id, clean($_SESSION["uid"]), $cat);
         }
     }
 
